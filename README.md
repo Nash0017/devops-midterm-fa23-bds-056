@@ -6,8 +6,8 @@ Nashama Asim · CSC418 DevOps for Cloud Computing · Fall 2026
 
 - Repository: https://github.com/Nash0017/devops-midterm-fa23-bds-056
 - Pipeline source: [Jenkinsfile](Jenkinsfile)
-- Public metrics through the temporary EC2 tunnel: https://voices-contribution-ridge-weblogs.trycloudflare.com/metrics
-- Intended direct EC2 metrics address: http://16.192.221.29:8000/metrics (AWS security-group access is still required)
+- Public EC2 metrics: http://16.192.221.29:8000/metrics
+- Intended direct EC2 metrics address: http://16.192.221.29:8000/metrics
 - Docker Hub image: `nash0017/devops-midterm-fa23-bds-056:latest`
 - Jenkins job: `MIDTERM-FA23-BDS-056`
 - Build email sender: `nashama123asim@gmail.com`
@@ -18,7 +18,7 @@ The assigned telecom configuration uses seed 31832 and the features `signal_nois
 
 ## Pipeline
 
-A GitHub push triggers Jenkins. Jenkins checks out the exact commit, builds the cached Python 3.12 tooling image, retrains from the committed CSV, runs four model and API tests, builds the deployment image, checks a candidate container, deploys on port 8000, verifies the deployed commit, and publishes versioned and latest Docker Hub tags. The post-build step sends Gmail SMTP notifications on success or failure.
+A GitHub push triggers Jenkins. Jenkins checks out the exact commit, builds the cached Python 3.12 tooling image, retrains from the committed CSV, runs four model and API tests, builds the deployment image, checks a candidate container, deploys on port 8000, verifies the deployed commit, and publishes versioned and latest Docker Hub tags. The post-build step sends Gmail SMTP notifications to nashama123asim@gmail.com on success or failure, following the updated instructor direction to notify the student.
 
 Dataset generation runs only for initial setup. Jenkins does not regenerate the CSV, so grader additions are retained.
 
@@ -35,7 +35,7 @@ Do not commit credentials, private keys, or app passwords.
 
 ## Networking
 
-The FastAPI container listens on EC2 port 8000. The AWS instance has no IAM role, and inbound AWS security-group changes require account access. A temporary Cloudflare tunnel provides public API access and signed GitHub webhook forwarding. Its URL can change if the tunnel process restarts; update the webhook and submitted URL if that happens. Jenkins administrative pages remain available through an SSH tunnel.
+The FastAPI container listens on EC2 port 8000. The AWS security group permits public API requests on port 8000 and signed webhook requests on port 8081. The public webhook is http://16.192.221.29:8081/github-webhook/. Jenkins administrative pages remain available through an SSH tunnel.
 
 The public webhook path is `/github-webhook/`. A separate EC2 gateway verifies its SHA-256 HMAC before forwarding it to Jenkins. The webhook secret is stored outside this repository.
 
@@ -49,4 +49,4 @@ curl -X POST http://127.0.0.1:8000/predict \
 docker ps --filter name=midterm-api
 ```
 
-SMTP acceptance confirms sending, not delivery into the instructor inbox. Verify actual receipt and webhook-triggered redeployment before submission.
+SMTP acceptance confirms sending, not delivery into the student inbox. Verify actual receipt and webhook-triggered redeployment before submission.

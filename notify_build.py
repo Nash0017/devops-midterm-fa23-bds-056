@@ -12,7 +12,7 @@ def main():
         raise ValueError('SMTP credential username must match the submitted sender')
     message = EmailMessage()
     message['From'] = sender
-    message['To'] = 'qasimalik@gmail.com'
+    message['To'] = 'nashama123asim@gmail.com'
     message['Subject'] = f"FA23-BDS-056 Jenkins {os.environ.get('BUILD_RESULT', 'UNKNOWN')} build {os.environ.get('BUILD_NUMBER', 'local')}"
     message.set_content('\n'.join([
         'Student: Nashama Asim', 'Registration: FA23-BDS-056',
@@ -30,7 +30,7 @@ def main():
         refused = smtp.send_message(message)
         if refused:
             raise RuntimeError('SMTP did not accept all recipients')
-    print('Build email accepted by Gmail SMTP for qasimalik@gmail.com')
+    print('Build email accepted by Gmail SMTP for nashama123asim@gmail.com')
 
 if __name__ == '__main__':
     main()
