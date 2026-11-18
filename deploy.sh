@@ -9,7 +9,7 @@ docker run -d --name "$candidate" -p 127.0.0.1:18000:8000 "$image"
 trap 'docker rm -f "$candidate" >/dev/null 2>&1 || true' EXIT
 ready=0
 for attempt in $(seq 1 30); do
-  if curl -fsS http://127.0.0.1:18000/metrics > /tmp/midterm-candidate-metrics.json; then ready=1; break; fi
+  if curl -fsS http://127.0.0.1:18000/metrics > /dev/null; then ready=1; break; fi
   sleep 2
 done
 test "$ready" = 1
