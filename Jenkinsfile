@@ -10,7 +10,7 @@ pipeline {
     environment {
         IMAGE_REPO = 'nash0017/devops-midterm-fa23-bds-056'
         STUDENT_ID = 'FA23-BDS-056'
-        METRICS_URL = 'http://16.192.221.29:8000/metrics'
+        METRICS_URL = 'https://involvement-genealogy-hay-jackson.trycloudflare.com/metrics'
     }
     stages {
         stage('Checkout latest dataset') {
@@ -63,13 +63,10 @@ pipeline {
     post {
         always {
             archiveArtifacts allowEmptyArchive: true, artifacts: 'artifacts/metrics.json'
-            emailext(
-                to: 'qasimalik@gmail.com',
-                from: 'nashama123asim@gmail.com',
-                subject: "${env.STUDENT_ID} Jenkins ${currentBuild.currentResult} build ${env.BUILD_NUMBER}",
-                body: "Student: Nashama Asim\nRegistration: ${env.STUDENT_ID}\nResult: ${currentBuild.currentResult}\nCommit: ${env.GIT_COMMIT}\nAPI: ${env.METRICS_URL}\nBuild: ${env.BUILD_URL}",
-                attachmentsPattern: 'artifacts/metrics.json'
-            )
+            script { env.BUILD_RESULT = currentBuild.currentResult }
+            withCredentials([usernamePassword(credentialsId: 'smtp-gmail', usernameVariable: 'SMTP_USER', passwordVariable: 'SMTP_PASSWORD')]) {
+                sh 'python3 notify_build.py'
+            }
         }
     }
 }
