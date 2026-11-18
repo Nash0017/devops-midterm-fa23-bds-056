@@ -10,7 +10,7 @@ pipeline {
     environment {
         IMAGE_REPO = 'nash0017/devops-midterm-fa23-bds-056'
         STUDENT_ID = 'FA23-BDS-056'
-        METRICS_URL = 'https://involvement-genealogy-hay-jackson.trycloudflare.com/metrics'
+        METRICS_URL = 'https://voices-contribution-ridge-weblogs.trycloudflare.com/metrics'
     }
     stages {
         stage('Checkout latest dataset') {

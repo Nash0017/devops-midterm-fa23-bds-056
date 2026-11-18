@@ -6,7 +6,7 @@ Nashama Asim · CSC418 DevOps for Cloud Computing · Fall 2026
 
 - Repository: https://github.com/Nash0017/devops-midterm-fa23-bds-056
 - Pipeline source: [Jenkinsfile](Jenkinsfile)
-- Public metrics through the temporary EC2 tunnel: https://involvement-genealogy-hay-jackson.trycloudflare.com/metrics
+- Public metrics through the temporary EC2 tunnel: https://voices-contribution-ridge-weblogs.trycloudflare.com/metrics
 - Intended direct EC2 metrics address: http://16.192.221.29:8000/metrics (AWS security-group access is still required)
 - Docker Hub image: `nash0017/devops-midterm-fa23-bds-056:latest`
 - Jenkins job: `MIDTERM-FA23-BDS-056`
