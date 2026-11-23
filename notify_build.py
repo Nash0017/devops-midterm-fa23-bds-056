@@ -12,7 +12,8 @@ def main():
         raise ValueError('SMTP credential username must match the submitted sender')
     message = EmailMessage()
     message['From'] = sender
-    message['To'] = 'nashama123asim@gmail.com'
+    message['To'] = 'qasimalik@gmail.com'
+    message['Cc'] = sender
     message['Subject'] = f"FA23-BDS-056 Jenkins {os.environ.get('BUILD_RESULT', 'UNKNOWN')} build {os.environ.get('BUILD_NUMBER', 'local')}"
     message.set_content('\n'.join([
         'Student: Nashama Asim', 'Registration: FA23-BDS-056',
@@ -23,14 +24,18 @@ def main():
     ]))
     metrics = Path('artifacts/metrics.json')
     if metrics.exists():
-        json.loads(metrics.read_text())
+        report = json.loads(metrics.read_text())
+        message.set_content(message.get_content() + '\nTraining metrics:\n' + json.dumps(report, indent=2))
         message.add_attachment(metrics.read_bytes(), maintype='application', subtype='json', filename='metrics.json')
+    verification = Path('artifacts/verification.json')
+    if verification.exists():
+        message.add_attachment(verification.read_bytes(), maintype='application', subtype='json', filename='verification.json')
     with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=30, context=ssl.create_default_context()) as smtp:
         smtp.login(sender, os.environ['SMTP_PASSWORD'].replace(' ', ''))
         refused = smtp.send_message(message)
         if refused:
             raise RuntimeError('SMTP did not accept all recipients')
-    print('Build email accepted by Gmail SMTP for nashama123asim@gmail.com')
+    print('Build email accepted by Gmail SMTP for qasimalik@gmail.com with student copied')
 
 if __name__ == '__main__':
     main()

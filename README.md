@@ -18,7 +18,7 @@ The assigned telecom configuration uses seed 31832 and the features `signal_nois
 
 ## Pipeline
 
-A GitHub push triggers Jenkins. Jenkins checks out the exact commit, builds the cached Python 3.12 tooling image, retrains from the committed CSV, runs four model and API tests, builds the deployment image, checks a candidate container, deploys on port 8000, verifies the deployed commit, and publishes versioned and latest Docker Hub tags. The post-build step sends Gmail SMTP notifications to nashama123asim@gmail.com on success or failure, following the updated instructor direction to notify the student.
+A GitHub push triggers Jenkins, with one-minute SCM polling as a fallback for missed events. Jenkins checks out the exact commit, builds the cached Python 3.12 tooling image, retrains from the committed CSV, runs four model and API tests, builds the deployment image, checks a candidate container, and deploys on port 8000. A separate verifier independently recomputes evaluation accuracy and predictions, then checks the served commit, dataset byte digest, row count, and model version. Jenkins publishes build-number, full-commit, and latest Docker Hub tags. Notifications are sent from `nashama123asim@gmail.com` to `qasimalik@gmail.com`, with the student sender copied, on success or failure.
 
 Dataset generation runs only for initial setup. Jenkins does not regenerate the CSV, so grader additions are retained.
 
@@ -49,4 +49,12 @@ curl -X POST http://127.0.0.1:8000/predict \
 docker ps --filter name=midterm-api
 ```
 
-SMTP acceptance confirms sending, not delivery into the student inbox. Verify actual receipt and webhook-triggered redeployment before submission.
+SMTP acceptance confirms sending, not receipt in the grading inbox. Verify actual receipt and webhook-triggered redeployment before submission.
+
+## Java update recovery
+
+An unattended Java upgrade on 20 November replaced the process-spawn helper while Jenkins was still running, causing Git checkout to fail before the pipeline could start. Restarting Jenkins repairs that mismatch. The installed systemd drop-in in `ops/jenkins-process-launch.conf` uses the FORK launch mechanism so child process creation does not depend on that on-disk helper. Java updates remain enabled. Restart Jenkins after Java upgrades as recommended by Jenkins.
+
+## Independent verification
+
+The pipeline runs `verify_deployment.py` in a separate process. It does not call `train.py` or trust the model's own reported accuracy: it reconstructs the specified imputation, scaling, stratified evaluation split, and logistic regression, then compares the running API against those results. Proof is archived as `artifacts/verification.json` and attached to the notification.

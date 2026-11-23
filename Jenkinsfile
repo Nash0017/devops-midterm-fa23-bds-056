@@ -6,7 +6,10 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '5'))
         skipDefaultCheckout(true)
     }
-    triggers { githubPush() }
+    triggers {
+        githubPush()
+        pollSCM('* * * * *')
+    }
     environment {
         IMAGE_REPO = 'nash0017/devops-midterm-fa23-bds-056'
         STUDENT_ID = 'FA23-BDS-056'
@@ -37,12 +40,17 @@ pipeline {
             post { always { junit allowEmptyResults: true, testResults: 'test-results.xml' } }
         }
         stage('Build image') {
-            steps { sh 'docker build --target runtime -t "$IMAGE_REPO:$IMAGE_TAG" -t "$IMAGE_REPO:latest" .' }
+            steps { sh 'docker build --target runtime --build-arg GIT_SHA="$GIT_COMMIT" -t "$IMAGE_REPO:$IMAGE_TAG" -t "$IMAGE_REPO:$GIT_COMMIT" -t "$IMAGE_REPO:latest" .' }
         }
         stage('Deploy and verify') {
             steps {
                 sh 'sh deploy.sh "$IMAGE_REPO:$IMAGE_TAG"'
                 sh '''python3 -c 'import json,os,urllib.request; m=json.load(urllib.request.urlopen("http://127.0.0.1:8000/metrics")); assert m["git_sha"]==os.environ["GIT_COMMIT"]; assert m["student_id"]==os.environ["STUDENT_ID"]; print(m)' '''
+            }
+        }
+        stage('Independently verify deployed data and accuracy') {
+            steps {
+                sh '''docker run --rm --network host --user "$(id -u):$(id -g)" -e GIT_COMMIT="$GIT_COMMIT" -e HOME=/tmp -v "$WORKSPACE:/app" midterm-tooling:latest python verify_deployment.py'''
             }
         }
         stage('Publish Docker Hub image') {
@@ -54,6 +62,7 @@ pipeline {
                         trap 'rm -rf "$DOCKER_CONFIG"' EXIT
                         printf '%s' "$DOCKER_TOKEN" | docker login --username "$DOCKER_USER" --password-stdin
                         docker push "$IMAGE_REPO:$IMAGE_TAG"
+                        docker push "$IMAGE_REPO:$GIT_COMMIT"
                         docker push "$IMAGE_REPO:latest"
                     '''
                 }
@@ -62,7 +71,7 @@ pipeline {
     }
     post {
         always {
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'artifacts/metrics.json'
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'artifacts/metrics.json,artifacts/verification.json'
             script { env.BUILD_RESULT = currentBuild.currentResult }
             withCredentials([usernamePassword(credentialsId: 'smtp-gmail', usernameVariable: 'SMTP_USER', passwordVariable: 'SMTP_PASSWORD')]) {
                 sh 'python3 notify_build.py'

@@ -8,6 +8,9 @@ FROM dependencies AS tooling
 COPY . .
 
 FROM dependencies AS runtime
+ARG GIT_SHA=unknown
+LABEL org.opencontainers.image.revision=$GIT_SHA
+LABEL org.opencontainers.image.source="https://github.com/Nash0017/devops-midterm-fa23-bds-056"
 COPY . .
 RUN useradd --uid 10001 --create-home appuser
 USER appuser
